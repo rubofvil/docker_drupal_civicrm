@@ -1,0 +1,87 @@
+version: "3.1"
+services:
+  civicrm:
+    image: rubofvil/civicrm
+    container_name: "${PROJECT_NAME}_civicrm"
+    build: .
+    cap_add:
+      - NET_ADMIN
+    environment:
+      TERM: xterm-color
+    links:
+      - mysql
+    restart: unless-stopped
+    volumes:
+    - ./html:/var/www/html
+    - ./vpnc:/etc/vpnc
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.${PROJECT_NAME}.entrypoints=http"
+      - "traefik.http.routers.${PROJECT_NAME}.rule=Host(`${PROJECT_NAME}.${DOMAIN}`)"
+      - "traefik.http.routers.${PROJECT_NAME}.service=${PROJECT_NAME}"
+      - "traefik.http.services.${PROJECT_NAME}.loadbalancer.server.port=80"
+    networks:
+      - rubfovil_lan
+  mysql:
+    image: mysql:5.7
+    container_name: "${PROJECT_NAME}_mysql"
+    environment:
+      MYSQL_ROOT_PASSWORD: admin
+    command: --init-file /home/init.sql
+    volumes:
+      - /ssd/docker/${PROJECT_NAME}:/var/lib/mysql
+      - ./init.sql:/home/init.sql
+    restart: unless-stopped
+    networks:
+      - rubfovil_lan
+  phpmyadmin:
+    image: phpmyadmin/phpmyadmin
+    container_name: "${PROJECT_NAME}_phpmyadmin"
+    links:
+      - mysql
+    environment:
+      PMA_HOST: mysql
+      PMA_USER: root
+      PMA_PASSWORD: admin
+    restart: unless-stopped
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.phpmyadmin${PROJECT_NAME}.entrypoints=http"
+      - "traefik.http.routers.phpmyadmin${PROJECT_NAME}.rule=Host(`${PROJECT_NAME}.phpmyadmin.${DOMAIN}`)"
+      - "traefik.http.routers.phpmyadmin${PROJECT_NAME}.service=phpmyadmin${PROJECT_NAME}"
+      - "traefik.http.services.phpmyadmin${PROJECT_NAME}.loadbalancer.server.port=80"
+    networks:
+      - rubfovil_lan
+  maildev:
+    image: djfarrelly/maildev
+    container_name: "${PROJECT_NAME}_maildev"
+    restart: unless-stopped
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.maildev${PROJECT_NAME}.entrypoints=http"
+      - "traefik.http.routers.maildev${PROJECT_NAME}.rule=Host(`${PROJECT_NAME}.maildev.${DOMAIN}`)"
+      - "traefik.http.routers.maildev${PROJECT_NAME}.service=maildev${PROJECT_NAME}"
+      - "traefik.http.services.maildev${PROJECT_NAME}.loadbalancer.server.port=80"
+    networks:
+      - rubfovil_lan
+  chrome:
+    image: selenium/standalone-chrome:97.0-chromedriver-97.0
+    container_name: "${PROJECT_NAME}_selenium"
+    ports:
+      - "7900:7900"
+      - "5900:5900"
+      - "4444:4444"
+    privileged: true
+    shm_size: 2g
+    networks:
+      - rubfovil_lan
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.selenium${PROJECT_NAME}.entrypoints=http"
+      - "traefik.http.routers.selenium${PROJECT_NAME}.rule=Host(`${PROJECT_NAME}.selenium.${DOMAIN}`)"
+      - "traefik.http.routers.selenium${PROJECT_NAME}.service=selenium${PROJECT_NAME}"
+      - "traefik.http.services.selenium${PROJECT_NAME}.loadbalancer.server.port=7900"
+
+networks:
+  rubfovil_lan:
+    external: true
