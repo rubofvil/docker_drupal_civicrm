@@ -21,7 +21,7 @@ services:
       - "traefik.http.routers.${PROJECT_NAME}.service=${PROJECT_NAME}"
       - "traefik.http.services.${PROJECT_NAME}.loadbalancer.server.port=80"
     networks:
-      - rubfovil_lan
+      - rubofvil_lan
   mysql:
     image: mysql:5.7
     container_name: "${PROJECT_NAME}_mysql"
@@ -33,7 +33,7 @@ services:
       - ./init.sql:/home/init.sql
     restart: unless-stopped
     networks:
-      - rubfovil_lan
+      - rubofvil_lan
   phpmyadmin:
     image: phpmyadmin/phpmyadmin
     container_name: "${PROJECT_NAME}_phpmyadmin"
@@ -51,7 +51,7 @@ services:
       - "traefik.http.routers.phpmyadmin${PROJECT_NAME}.service=phpmyadmin${PROJECT_NAME}"
       - "traefik.http.services.phpmyadmin${PROJECT_NAME}.loadbalancer.server.port=80"
     networks:
-      - rubfovil_lan
+      - rubofvil_lan
   maildev:
     image: djfarrelly/maildev
     container_name: "${PROJECT_NAME}_maildev"
@@ -63,7 +63,7 @@ services:
       - "traefik.http.routers.maildev${PROJECT_NAME}.service=maildev${PROJECT_NAME}"
       - "traefik.http.services.maildev${PROJECT_NAME}.loadbalancer.server.port=80"
     networks:
-      - rubfovil_lan
+      - rubofvil_lan
   chrome:
     image: selenium/standalone-chrome:97.0-chromedriver-97.0
     container_name: "${PROJECT_NAME}_selenium"
@@ -74,7 +74,7 @@ services:
     privileged: true
     shm_size: 2g
     networks:
-      - rubfovil_lan
+      - rubofvil_lan
     labels:
       - "traefik.enable=true"
       - "traefik.http.routers.selenium${PROJECT_NAME}.entrypoints=http"
@@ -83,5 +83,5 @@ services:
       - "traefik.http.services.selenium${PROJECT_NAME}.loadbalancer.server.port=7900"
 
 networks:
-  rubfovil_lan:
+  rubofvil_lan:
     external: true

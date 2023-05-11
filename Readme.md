@@ -1,10 +1,22 @@
 # Readme
 
+## Requirements
+
+- Configure a traefik/create lan
+  - [traefik](https://github.com/rubofvil/docker_compose_traefik)
+- Create a .env file
+  - `cp .env.example .env`
+
+## Repos used as reference
+
+- [civicrm-buildkit-docker](https://github.com/michaelmcandrew/civicrm-buildkit-docker)
+-
+
 ## Steps to migrate
 
 - Add in the .env the var `PROJECT_NAME`
   - The url for the **web** will be `PROJECT_NAME`.localhost
-  - The url for the **phpmyadmin** will be `PROJECT_NAME`.localhost
+  - The url for the **phpmyadmin** will be `PROJECT_NAME`.phpmyadmin.localhost
   - The url for the mails **phpmyadmin** will be `PROJECT_NAME`.maildev.localhost
 - Import the database with user root/admin and the autohost generated
 - Move the files to the directory `html`.
@@ -13,9 +25,6 @@ Example to use with vscode with xdebug
 
 ```json
 {
-  // Use IntelliSense to learn about possible attributes.
-  // Hover to view descriptions of existing attributes.
-  // For more information, visit: https://go.microsoft.com/fwlink/?linkid=830387
   "version": "0.2.0",
   "configurations": [
     {
@@ -24,17 +33,12 @@ Example to use with vscode with xdebug
       "request": "launch",
       "port": 9003,
       "pathMappings": {
-        // setup local folder mapping as example
         "/var/www/html/web": "{$LOCAL_PATH}/html/web"
       },
       "xdebugSettings": {
         "max_children": 200
-        //"max_data": 1024,
-        //"max_depth": 4,
-        //"show_hidden": 1
       },
       "log": true,
-      // optional to stop at the beginning of execution
       "stopOnEntry": true
     },
     {
