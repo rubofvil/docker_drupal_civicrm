@@ -1,5 +1,4 @@
 .env
-html/*
-vendor/*
+html/
 composer.json
 composer.lock

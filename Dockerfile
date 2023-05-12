@@ -71,7 +71,9 @@ RUN docker-php-ext-install bcmath \
   && docker-php-ext-install opcache \
   && docker-php-ext-install pdo_mysql \
   && docker-php-ext-install soap \
-  && docker-php-ext-install zip
+  && docker-php-ext-install zip \
+  && docker-php-ext-install tokenizer \
+  && docker-php-ext-install filter
 
 # Install and enable imagick PECL extensions
 RUN pecl install imagick \
