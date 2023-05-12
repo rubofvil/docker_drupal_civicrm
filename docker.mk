@@ -5,7 +5,6 @@ default: up
 COMPOSER_ROOT ?= /var/www/html
 DRUPAL_ROOT ?= /var/www/html/web
 
-## help	:	Print commands help.
 .PHONY: help
 ifneq (,$(wildcard docker.mk))
 help : docker.mk
@@ -15,7 +14,6 @@ help : Makefile
 	@sed -n 's/^##//p' $<
 endif
 
-## up	:	Start up containers.
 .PHONY: up
 up:
 	@echo "Starting up containers for $(PROJECT_NAME)..."
@@ -26,67 +24,47 @@ up:
 mutagen:
 	mutagen-compose up
 
-## down	:	Stop containers.
 .PHONY: down
 down: stop
 
-## start	:	Start containers without updating.
 .PHONY: start
 start:
 	@echo "Starting containers for $(PROJECT_NAME) from where you left off..."
 	@docker-compose start
 
-## stop	:	Stop containers.
 .PHONY: stop
 stop:
 	@echo "Stopping containers for $(PROJECT_NAME)..."
 	@docker-compose stop
 
-## prune	:	Remove containers and their volumes.
-##		You can optionally pass an argument with the service name to prune single container
-##		prune mariadb	: Prune `mariadb` container and remove its volumes.
-##		prune mariadb solr	: Prune `mariadb` and `solr` containers and remove their volumes.
 .PHONY: prune
 prune:
 	@echo "Removing containers for $(PROJECT_NAME)..."
 	@docker-compose down -v $(filter-out $@,$(MAKECMDGOALS))
 
-## ps	:	List running containers.
 .PHONY: ps
 ps:
 	@docker ps --filter name='$(PROJECT_NAME)*'
 
-## shell	:	Access `php` container via shell.
-##		You can optionally pass an argument with a service name to open a shell on the specified container
 .PHONY: shell
 shell:
 	docker exec -ti -e COLUMNS=$(shell tput cols) -e LINES=$(shell tput lines) $(shell docker ps --filter name='$(PROJECT_NAME)_$(or $(filter-out $@,$(MAKECMDGOALS)), 'php')' --format "{{ .ID }}") sh
 
-## composer	:	Executes `composer` command in a specified `COMPOSER_ROOT` directory (default is `/var/www/html`).
-##		To use "--flag" arguments include them in quotation marks.
-##		For example: make composer "update drupal/core --with-dependencies"
 .PHONY: composer
 composer:
 	docker exec $(shell docker ps --filter name='^/$(PROJECT_NAME)_civicrm' --format "{{ .ID }}") composer --working-dir=$(COMPOSER_ROOT) $(filter-out $@,$(MAKECMDGOALS))
 
-## drush	:	Executes `drush` command in a specified `DRUPAL_ROOT` directory (default is `/var/www/html/web`).
-##		To use "--flag" arguments include them in quotation marks.
-##		For example: make drush "watchdog:show --type=cron"
 .PHONY: drush
 drush:
 	docker exec $(shell docker ps --filter name='^/$(PROJECT_NAME)_civicrm' --format "{{ .ID }}") drush --uri=$(PROJECT_NAME).$(DOMAIN) -r $(DRUPAL_ROOT) $(filter-out $@,$(MAKECMDGOALS))
 
-.PHONY: tmp
-tmp:
-	echo ${DRUPAL_ROOT}
-
 .PHONY: clean_database_test
 clean_database_test:
-	docker exec $(shell docker ps --filter name='^/$(PROJECT_NAME)_mysql' --format "{{ .ID }}")  mysql -u root -padmin -e "DROP DATABASE test;CREATE DATABASE test;" $(filter-out $@,$(MAKECMDGOALS))
+	docker exec $(shell docker ps --filter name='^/$(PROJECT_NAME)_mysql' --format "{{ .ID }}") mysql -u root -padmin -e "DROP DATABASE IF EXISTS test; CREATE DATABASE test;" $(filter-out $@,$(MAKECMDGOALS))
 
 .PHONY: phpunit
 phpunit:
-	docker exec $(shell docker ps --filter name='^/$(PROJECT_NAME)_civicrm' --format "{{ .ID }}")  sudo -u www-data /var/www/html/vendor/phpunit/phpunit/phpunit -v -c /var/www/html/phpunit.xml $(EXTRA)
+	docker exec $(shell docker ps --filter name='^/$(PROJECT_NAME)_civicrm' --format "{{ .ID }}") sudo -u www-data /var/www/html/vendor/phpunit/phpunit/phpunit -v -c /var/www/html/phpunit.xml $(EXTRA)
 
 .PHONY: clone_repo
 clone_repo:
@@ -96,17 +74,17 @@ clone_repo:
 
 .PHONY: install_drupal
 install_drupal:
-	docker exec $(shell docker ps --filter name='^/$(PROJECT_NAME)_mysql' --format "{{ .ID }}")  mysql -u root -padmin -e "DROP DATABASE drupal;CREATE DATABASE drupal;"
+	docker exec $(shell docker ps --filter name='^/$(PROJECT_NAME)_mysql' --format "{{ .ID }}") mysql -u root -padmin -e "DROP DATABASE IF EXISTS drupal; CREATE DATABASE drupal;"
 	docker exec $(shell docker ps --filter name='^/$(PROJECT_NAME)_civicrm' --format "{{ .ID }}") drush -r $(DRUPAL_ROOT) site-install ${PROFILE} --db-url=mysql://root:admin@${PROJECT_NAME}_mysql:3306/drupal --account-pass=admin --uri=http://$(PROJECT_NAME).$(DOMAIN) -y
 
 .PHONY: uninstall_drupal
 uninstall_drupal:
-	docker exec $(shell docker ps --filter name='^/$(PROJECT_NAME)_mysql' --format "{{ .ID }}")  mysql -u root -padmin -e "DROP DATABASE drupal; CREATE DATABASE drupal;"
-	docker exec $(shell docker ps --filter name='^/$(PROJECT_NAME)_civicrm' --format "{{ .ID }}")  rm -f $(DRUPAL_ROOT)/sites/default/settings.php
-	docker exec $(shell docker ps --filter name='^/$(PROJECT_NAME)_civicrm' --format "{{ .ID }}")  rm -f $(DRUPAL_ROOT)/sites/default/civicrm.settings.php
-	docker exec $(shell docker ps --filter name='^/$(PROJECT_NAME)_civicrm' --format "{{ .ID }}")  rm -rf $(DRUPAL_ROOT)/sites/default/files
-	docker exec $(shell docker ps --filter name='^/$(PROJECT_NAME)_civicrm' --format "{{ .ID }}")  mkdir files
-	docker exec $(shell docker ps --filter name='^/$(PROJECT_NAME)_civicrm' --format "{{ .ID }}")  sudo chown -R www-data:www-data $(DRUPAL_ROOT)
+	docker exec $(shell docker ps --filter name='^/$(PROJECT_NAME)_mysql' --format "{{ .ID }}") mysql -u root -padmin -e "DROP DATABASE IF EXISTS drupal;"
+	docker exec $(shell docker ps --filter name='^/$(PROJECT_NAME)_civicrm' --format "{{ .ID }}") rm -f $(DRUPAL_ROOT)/sites/default/settings.php
+	docker exec $(shell docker ps --filter name='^/$(PROJECT_NAME)_civicrm' --format "{{ .ID }}") rm -f $(DRUPAL_ROOT)/sites/default/civicrm.settings.php
+	docker exec $(shell docker ps --filter name='^/$(PROJECT_NAME)_civicrm' --format "{{ .ID }}") rm -rf $(DRUPAL_ROOT)/sites/default/files
+	docker exec $(shell docker ps --filter name='^/$(PROJECT_NAME)_civicrm' --format "{{ .ID }}") mkdir files
+	docker exec $(shell docker ps --filter name='^/$(PROJECT_NAME)_civicrm' --format "{{ .ID }}") sudo chown -R www-data:www-data $(DRUPAL_ROOT)
 
 .PHONY: add_required_files_install
 add_required_files_install:
@@ -115,7 +93,7 @@ add_required_files_install:
 
 .PHONY: set_permissions
 set_permissions:
-	docker exec $(shell docker ps --filter name='^/$(PROJECT_NAME)_civicrm' --format "{{ .ID }}")  sudo chown -R www-data:www-data $(DRUPAL_ROOT)
+	docker exec $(shell docker ps --filter name='^/$(PROJECT_NAME)_civicrm' --format "{{ .ID }}") sudo chown -R www-data:www-data $(DRUPAL_ROOT)
 
 .PHONY: download_drupal_civicrm
 download_drupal_civicrm:
@@ -125,10 +103,7 @@ download_drupal_civicrm:
 	docker-compose down && docker-compose up -d
 	docker exec $(shell docker ps --filter name='^/$(PROJECT_NAME)_civicrm' --format "{{ .ID }}") composer install --working-dir=$(COMPOSER_ROOT)
 
-## logs	:	View containers logs.
-##		You can optinally pass an argument with the service name to limit logs
-##		logs php	: View `php` container logs.
-##		logs nginx php	: View `nginx` and `php` containers logs.
+
 .PHONY: logs
 logs:
 	@docker-compose logs -f $(filter-out $@,$(MAKECMDGOALS))

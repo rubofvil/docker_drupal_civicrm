@@ -22,46 +22,47 @@
 - Move the files to the directory `html`.
   - Modify `civicrm.settings.php` and `settings.php`
 
-Example to use with vscode with xdebug
+Example to use with vscode with xdebug with xdebug
 
 ```json
 {
-  "version": "0.2.0",
-  "configurations": [
-    {
-      "name": "Listen for XDebug",
-      "type": "php",
-      "request": "launch",
-      "port": 9003,
-      "pathMappings": {
-        "/var/www/html/web": "{$LOCAL_PATH}/html/web"
+  "launch": {
+    "version": "0.2.0",
+    "configurations": [
+      {
+        "name": "Listen for XDebug",
+        "type": "php",
+        "request": "launch",
+        "port": 9003,
+        "pathMappings": {
+          "/var/www/html": "{TO_REPLACE_WITH_LOCAL_PATH}/docker_drupal_civicrm/html",
+        },
+        "xdebugSettings": {
+          "max_children": 200
+        },
+        "log": true,
       },
-      "xdebugSettings": {
-        "max_children": 200
-      },
-      "log": true,
-      "stopOnEntry": true
-    },
-    {
-      "name": "Launch currently open script",
-      "type": "php",
-      "request": "launch",
-      "program": "${file}",
-      "cwd": "${fileDirname}",
-      "port": 9000
-    }
-  ]
+      {
+        "name": "Launch currently open script",
+        "type": "php",
+        "request": "launch",
+        "program": "${file}",
+        "cwd": "${fileDirname}",
+        "port": 9000
+      }
+    ]
+  }
 }
 ```
 
-## Rules to add ufw
+## Rules to add ufw for xdebug
 
 ´´´bash
 sudo ufw allow from 172.18.0.0/24 to any port 9003
 sudo ufw allow from 172.17.0.1 to any port 9003
 ´´´
 
-## Example of use MAKE
+## Example of use PHPUNIT
 
 - `make phpunit`
 
