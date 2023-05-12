@@ -97,15 +97,16 @@ clone_repo:
 .PHONY: install_drupal
 install_drupal:
 	docker exec $(shell docker ps --filter name='^/$(PROJECT_NAME)_mysql' --format "{{ .ID }}")  mysql -u root -padmin -e "DROP DATABASE drupal;CREATE DATABASE drupal;"
-	docker exec $(shell docker ps --filter name='^/$(PROJECT_NAME)_civicrm' --format "{{ .ID }}") drush -r /var/www/html/web site-install ${PROFILE} --db-url=mysql://root:admin@${PROJECT_NAME}_mysql:3306/drupal --account-pass=admin --uri=http://$(PROJECT_NAME).$(DOMAIN) -y
+	docker exec $(shell docker ps --filter name='^/$(PROJECT_NAME)_civicrm' --format "{{ .ID }}") drush -r $(DRUPAL_ROOT) site-install ${PROFILE} --db-url=mysql://root:admin@${PROJECT_NAME}_mysql:3306/drupal --account-pass=admin --uri=http://$(PROJECT_NAME).$(DOMAIN) -y
 
 .PHONY: uninstall_drupal
 uninstall_drupal:
 	docker exec $(shell docker ps --filter name='^/$(PROJECT_NAME)_mysql' --format "{{ .ID }}")  mysql -u root -padmin -e "DROP DATABASE drupal; CREATE DATABASE drupal;"
-	docker exec $(shell docker ps --filter name='^/$(PROJECT_NAME)_civicrm' --format "{{ .ID }}")  rm -f /var/www/html/web/sites/default/settings.php
-	docker exec $(shell docker ps --filter name='^/$(PROJECT_NAME)_civicrm' --format "{{ .ID }}")  rm -rf /var/www/html/web/sites/default/files
+	docker exec $(shell docker ps --filter name='^/$(PROJECT_NAME)_civicrm' --format "{{ .ID }}")  rm -f $(DRUPAL_ROOT)/sites/default/settings.php
+	docker exec $(shell docker ps --filter name='^/$(PROJECT_NAME)_civicrm' --format "{{ .ID }}")  rm -f $(DRUPAL_ROOT)/sites/default/civicrm.settings.php
+	docker exec $(shell docker ps --filter name='^/$(PROJECT_NAME)_civicrm' --format "{{ .ID }}")  rm -rf $(DRUPAL_ROOT)/sites/default/files
 	docker exec $(shell docker ps --filter name='^/$(PROJECT_NAME)_civicrm' --format "{{ .ID }}")  mkdir files
-	docker exec $(shell docker ps --filter name='^/$(PROJECT_NAME)_civicrm' --format "{{ .ID }}")  sudo chown -R www-data:www-data /var/www/html
+	docker exec $(shell docker ps --filter name='^/$(PROJECT_NAME)_civicrm' --format "{{ .ID }}")  sudo chown -R www-data:www-data $(DRUPAL_ROOT)
 
 .PHONY: add_required_files_install
 add_required_files_install:
@@ -114,7 +115,7 @@ add_required_files_install:
 
 .PHONY: set_permissions
 set_permissions:
-	docker exec $(shell docker ps --filter name='^/$(PROJECT_NAME)_civicrm' --format "{{ .ID }}")  sudo chown -R www-data:www-data /var/www/html
+	docker exec $(shell docker ps --filter name='^/$(PROJECT_NAME)_civicrm' --format "{{ .ID }}")  sudo chown -R www-data:www-data $(DRUPAL_ROOT)
 
 .PHONY: download_drupal_civicrm
 download_drupal_civicrm:
