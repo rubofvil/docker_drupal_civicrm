@@ -74,7 +74,7 @@ composer:
 ##		For example: make drush "watchdog:show --type=cron"
 .PHONY: drush
 drush:
-	docker exec $(shell docker ps --filter name='^/$(PROJECT_NAME)_civicrm' --format "{{ .ID }}") drush -r $(DRUPAL_ROOT) $(filter-out $@,$(MAKECMDGOALS))
+	docker exec $(shell docker ps --filter name='^/$(PROJECT_NAME)_civicrm' --format "{{ .ID }}") drush --uri=$(PROJECT_NAME).$(DOMAIN) -r $(DRUPAL_ROOT) $(filter-out $@,$(MAKECMDGOALS))
 
 .PHONY: tmp
 tmp:
@@ -97,12 +97,15 @@ clone_repo:
 .PHONY: install_drupal
 install_drupal:
 	docker exec $(shell docker ps --filter name='^/$(PROJECT_NAME)_mysql' --format "{{ .ID }}")  mysql -u root -padmin -e "DROP DATABASE drupal;CREATE DATABASE drupal;"
-	docker exec $(shell docker ps --filter name='^/$(PROJECT_NAME)_civicrm' --format "{{ .ID }}")  drush -r /var/www/html/web site-install ${PROFILE} --db-url=mysql://root:admin@${PROJECT_NAME}_mysql:3306/drupal --account-pass=admin	 -y
+	docker exec $(shell docker ps --filter name='^/$(PROJECT_NAME)_civicrm' --format "{{ .ID }}") drush -r /var/www/html/web site-install ${PROFILE} --db-url=mysql://root:admin@${PROJECT_NAME}_mysql:3306/drupal --account-pass=admin --uri=http://$(PROJECT_NAME).$(DOMAIN) -y
 
 .PHONY: uninstall_drupal
 uninstall_drupal:
 	docker exec $(shell docker ps --filter name='^/$(PROJECT_NAME)_mysql' --format "{{ .ID }}")  mysql -u root -padmin -e "DROP DATABASE drupal; CREATE DATABASE drupal;"
 	docker exec $(shell docker ps --filter name='^/$(PROJECT_NAME)_civicrm' --format "{{ .ID }}")  rm -f /var/www/html/web/sites/default/settings.php
+	docker exec $(shell docker ps --filter name='^/$(PROJECT_NAME)_civicrm' --format "{{ .ID }}")  rm -rf /var/www/html/web/sites/default/files
+	docker exec $(shell docker ps --filter name='^/$(PROJECT_NAME)_civicrm' --format "{{ .ID }}")  mkdir files
+	docker exec $(shell docker ps --filter name='^/$(PROJECT_NAME)_civicrm' --format "{{ .ID }}")  sudo chown -R www-data:www-data /var/www/html
 
 .PHONY: add_required_files_install
 add_required_files_install:
@@ -113,9 +116,13 @@ add_required_files_install:
 set_permissions:
 	docker exec $(shell docker ps --filter name='^/$(PROJECT_NAME)_civicrm' --format "{{ .ID }}")  sudo chown -R www-data:www-data /var/www/html
 
-.PHONY: install_drupal
-install_drupal:
-	docker exec $(shell docker ps --filter name='^/$(PROJECT_NAME)_civicrm' --format "{{ .ID }}")  drush -r $(DRUPAL_ROOT) site-install $(DRUPAL_PROFILE) --account-name=admin --account-pass=admin --db-url=mysql://root:admin@$(shell docker ps --filter name='^/$(PROJECT_NAME)_mysql' --format "{{ .ID }}"):3306/test --yes
+.PHONY: download_drupal_civicrm
+download_drupal_civicrm:
+	rm -rf html
+	mkdir html
+	git clone -b ${REPO_DRUPAL_CIVICRM_TAG} ${REPO_DRUPAL_CIVICRM} html
+	docker-compose down && docker-compose up -d
+	docker exec $(shell docker ps --filter name='^/$(PROJECT_NAME)_civicrm' --format "{{ .ID }}") composer install --working-dir=$(COMPOSER_ROOT)
 
 ## logs	:	View containers logs.
 ##		You can optinally pass an argument with the service name to limit logs
