@@ -3,17 +3,20 @@ services:
   civicrm:
     image: rubofvil/civicrm
     container_name: "${PROJECT_NAME}_civicrm"
+    hostname: "${PROJECT_NAME}_civicrm"
     build: .
     cap_add:
       - NET_ADMIN
     environment:
       TERM: xterm-color
+      SELENIUM_PORT: 4444
     links:
       - mysql
     restart: unless-stopped
     volumes:
     - ./html:/var/www/html
     - ./vpnc:/etc/vpnc
+    - ./scripts:/home/scripts
     labels:
       - "traefik.enable=true"
       - "traefik.http.routers.${PROJECT_NAME}.entrypoints=http"

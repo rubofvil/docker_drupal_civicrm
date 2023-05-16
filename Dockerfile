@@ -1,4 +1,4 @@
-FROM php:8.1-apache
+FROM php:8.1.19-apache
 # Install apt packages
 #
 # Required for php extensions
@@ -29,8 +29,8 @@ RUN apt-get update \
   && apt-get install -y --no-install-recommends \
   apt-transport-https
 
-RUN curl -sL https://deb.nodesource.com/setup_14.x | bash - \
-  && apt-get update \
+  RUN curl -sL https://deb.nodesource.com/setup_14.x | bash - \
+    && apt-get update \
   && apt-get install -y --no-install-recommends \
   bash-completion \
   default-mysql-client \
@@ -151,8 +151,17 @@ COPY ./docker-civicrm-entrypoint /usr/local/bin
 
 RUN chmod u+x /usr/local/bin/docker-civicrm-entrypoint
 
-ENTRYPOINT [ "docker-civicrm-entrypoint" ]
-
 CMD ["apache2-foreground"]
 
 RUN rm /usr/local/etc/php/conf.d/docker-php-ext-xdebug.ini
+
+## Install cv
+RUN sudo curl -LsS https://download.civicrm.org/cv/cv.phar -o /usr/local/bin/cv
+RUN sudo chmod +x /usr/local/bin/cv
+
+## Install drupal console
+RUN curl https://drupalconsole.com/installer -L -o drupal.phar
+RUN mv drupal.phar /usr/local/bin/drupal
+RUN chmod +x /usr/local/bin/drupal
+
+ENV CONTAINER_IP=$("hostname -i")
