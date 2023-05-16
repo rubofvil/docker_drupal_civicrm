@@ -4,6 +4,10 @@ default: up
 
 COMPOSER_ROOT ?= /var/www/html
 DRUPAL_ROOT ?= /var/www/html/web
+SUFFIX_CONTAINER ?= _civicrm
+NAME_CONTAINER=$(PROJECT_NAME)$(SUFFIX_CONTAINER)
+IP_CONTAINER=$(shell docker inspect -f '{{range .NetworkSettings.Networks}}{{.IPAddress}}{{end}}' $(NAME_CONTAINER))
+
 
 .PHONY: help
 ifneq (,$(wildcard docker.mk))
@@ -62,6 +66,14 @@ drush:
 clean_database_test:
 	docker exec $(shell docker ps --filter name='^/$(PROJECT_NAME)_mysql' --format "{{ .ID }}") mysql -u root -padmin -e "DROP DATABASE IF EXISTS test; CREATE DATABASE test;" $(filter-out $@,$(MAKECMDGOALS))
 
+.PHONY: phpunit_setup
+phpunit_setup:
+	rm -rf html/phpunit.xml
+	cp phpunit.xml.dist html/phpunit.xml
+	sed -r 's/name\=\"SIMPLETEST_BASE_URL\"\ value\=\"(.*)\"/name\=\"SIMPLETEST_BASE_URL\"\ value\=\"http\:\/\/$(IP_CONTAINER)\"/g' html/phpunit.xml
+	sed -r 's/name\=\"BROWSERTEST_OUTPUT_BASE_URL\"\ value\=\"(.*)\"/name\=\"BROWSERTEST_OUTPUT_BASE_URL\"\ value\=\"http\:\/\/"$(PROJECT_NAME)\.localhost\"/g' html/phpunit.xml
+	sed 's/ALIAS_SELENIUM/$(PROJECT_NAME)_selenium/g' html/phpunit.xml
+
 .PHONY: phpunit
 phpunit:
 	docker exec $(shell docker ps --filter name='^/$(PROJECT_NAME)_civicrm' --format "{{ .ID }}") sudo -u www-data /var/www/html/vendor/phpunit/phpunit/phpunit -v -c /var/www/html/phpunit.xml $(EXTRA)
@@ -102,7 +114,6 @@ download_drupal_civicrm:
 	git clone -b ${REPO_DRUPAL_CIVICRM_TAG} ${REPO_DRUPAL_CIVICRM} html
 	docker-compose down && docker-compose up -d
 	docker exec $(shell docker ps --filter name='^/$(PROJECT_NAME)_civicrm' --format "{{ .ID }}") composer install --working-dir=$(COMPOSER_ROOT)
-
 
 .PHONY: logs
 logs:

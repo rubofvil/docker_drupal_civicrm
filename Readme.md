@@ -67,3 +67,9 @@ sudo ufw allow from 172.17.0.1 to any port 9003
 - `make phpunit`
 
 `EXTRA="--filter testAssignContributionSecondContactSelectByUser /var/www/html/web/modules/contrib/webform_civicrm/tests/src/FunctionalJavascript/ContributionDummyTest.php" make phpunit`
+
+Example to execute phpunit in
+
+```bash
+sudo -u www-data vendor/phpunit/phpunit/phpunit -v -c ./phpunit.xml web/modules/contrib/webform_civicrm/tests/src/FunctionalJavascript/ActivitySubmissionTest.php
+```
