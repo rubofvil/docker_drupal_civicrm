@@ -151,6 +151,8 @@ COPY ./docker-civicrm-entrypoint /usr/local/bin
 
 RUN chmod u+x /usr/local/bin/docker-civicrm-entrypoint
 
+ENTRYPOINT [ "docker-civicrm-entrypoint" ]
+
 CMD ["apache2-foreground"]
 
 RUN rm /usr/local/etc/php/conf.d/docker-php-ext-xdebug.ini
@@ -163,5 +165,3 @@ RUN sudo chmod +x /usr/local/bin/cv
 RUN curl https://drupalconsole.com/installer -L -o drupal.phar
 RUN mv drupal.phar /usr/local/bin/drupal
 RUN chmod +x /usr/local/bin/drupal
-
-ENV CONTAINER_IP=$("hostname -i")
