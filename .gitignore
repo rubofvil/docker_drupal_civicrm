@@ -3,3 +3,4 @@ html/
 composer.json
 composer.lock
 .vscode/
+tmp/

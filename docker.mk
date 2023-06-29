@@ -93,6 +93,10 @@ clone_repo:
 install_drupal:
 	docker exec $(shell docker ps --filter name='^/$(PROJECT_NAME)_mysql' --format "{{ .ID }}") mysql -u root -padmin -e "DROP DATABASE IF EXISTS drupal; CREATE DATABASE drupal;"
 	docker exec $(shell docker ps --filter name='^/$(PROJECT_NAME)_civicrm' --format "{{ .ID }}") drush -r $(DRUPAL_ROOT) site-install ${PROFILE} --db-url=mysql://root:admin@${PROJECT_NAME}_mysql:3306/drupal --account-pass=admin --uri=http://$(PROJECT_NAME).$(DOMAIN) -y
+	docker exec $(shell docker ps --filter name='^/$(PROJECT_NAME)_civicrm' --format "{{ .ID }}") sudo chmod 777 $(DRUPAL_ROOT)/sites/default
+	docker exec $(shell docker ps --filter name='^/$(PROJECT_NAME)_civicrm' --format "{{ .ID }}") drush -l http://${PROJECT_NAME}.${DOMAIN} -r $(DRUPAL_ROOT) en $(MODULES) -y
+	make set_permissions
+
 
 .PHONY: uninstall_drupal
 uninstall_drupal:
@@ -114,11 +118,31 @@ set_permissions:
 
 .PHONY: download_drupal_civicrm
 download_drupal_civicrm:
-	rm -rf html
+	sudo rm -rf html
 	mkdir html
 	git clone -b ${REPO_DRUPAL_CIVICRM_TAG} ${REPO_DRUPAL_CIVICRM} html
 	docker-compose down && docker-compose up -d
-	docker exec $(shell docker ps --filter name='^/$(PROJECT_NAME)_civicrm' --format "{{ .ID }}") composer install --working-dir=$(COMPOSER_ROOT)
+#	docker exec $(shell docker ps --filter name='^/$(PROJECT_NAME)_civicrm' --format "{{ .ID }}") composer install --working-dir=$(COMPOSER_ROOT)
+
+
+# ToDO get the credenctials with `drush @alias sql-connect`
+.PHONE: sync_external_db
+sync_external_db:
+#Pending to set a bigger insert in the external SET GLOBAL bulk_insert_buffer_size = 1024 * 1024 * 256;
+	ssh $(SSH_REMOTE_EXTRA_PARAMS) $(SSH_REMOTE_USER)@$(SSH_REMOTE_HOST) "mysqldump --skip-triggers -u $(MYSQL_REMOTE_USER) -p$(MYSQL_REMOTE_PASS) -h $(MYSQL_REMOTE_HOST) $(MYSQL_REMOTE_DB)" | gzip > $(MYSQL_REMOTE_DB).sql.gz
+	gunzip  $(MYSQL_REMOTE_DB).sql.gz
+	docker cp $(MYSQL_REMOTE_DB).sql $(shell docker ps --filter name='^/$(PROJECT_NAME)_mysql' --format "{{ .ID }}"):/$(MYSQL_REMOTE_DB).sql
+	docker exec $(shell docker ps --filter name='^/$(PROJECT_NAME)_mysql' --format "{{ .ID }}") mysql -u root -padmin -e "DROP DATABASE IF EXISTS drupal; CREATE DATABASE drupal;"
+	docker exec $(shell docker ps --filter name='^/$(PROJECT_NAME)_mysql' --format "{{ .ID }}") ls /
+	docker exec $(shell docker ps --filter name='^/$(PROJECT_NAME)_mysql' --format "{{ .ID }}") echo $(MYSQL_REMOTE_DB).sql
+	docker exec -i $(shell docker ps --filter name='^/$(PROJECT_NAME)_mysql' --format "{{ .ID }}") mysql -u root -padmin drupal < $(MYSQL_REMOTE_DB).sql $(filter-out $@,$(MAKECMDGOALS))
+	docker exec $(shell docker ps --filter name='^/$(PROJECT_NAME)_mysql' --format "{{ .ID }}") rm $(MYSQL_REMOTE_DB).sql
+	sudo rsync -uzva --no-l -e "ssh $(SSH_REMOTE_EXTRA_PARAMS)" $(SSH_REMOTE_USER)@$(SSH_REMOTE_HOST):$(SSH_REMOTE_PATH)/files/civicrm html/web/sites/default/files/
+	sudo rsync -uzva --no-l -e "ssh $(SSH_REMOTE_EXTRA_PARAMS)" $(SSH_REMOTE_USER)@$(SSH_REMOTE_HOST):$(SSH_REMOTE_PATH)/modules html/web/sites
+	sudo rsync -uzva --no-l -e "ssh $(SSH_REMOTE_EXTRA_PARAMS)" $(SSH_REMOTE_USER)@$(SSH_REMOTE_HOST):$(SSH_REMOTE_PATH)/themes html/web/sites
+	sudo rsync -uzva --no-l -e "ssh $(SSH_REMOTE_EXTRA_PARAMS)" $(SSH_REMOTE_USER)@$(SSH_REMOTE_HOST):$(SSH_REMOTE_PATH)/libraries html/web/sites
+	sudo rsync -uzva --no-l -e "ssh $(SSH_REMOTE_EXTRA_PARAMS)" $(SSH_REMOTE_USER)@$(SSH_REMOTE_HOST):$(SSH_REMOTE_PATH)/vendor html/web/sites
+	make set_permissions
 
 .PHONY: logs
 logs:
