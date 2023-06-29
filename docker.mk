@@ -6,7 +6,14 @@ COMPOSER_ROOT ?= /var/www/html
 DRUPAL_ROOT ?= /var/www/html/web
 SUFFIX_CONTAINER ?= _civicrm
 NAME_CONTAINER=$(PROJECT_NAME)$(SUFFIX_CONTAINER)
+
+
+SUFFIX_CONTAINER_MYSQL ?= _mysql
+NAME_CONTAINER_MYSQL=$(PROJECT_NAME)$(SUFFIX_CONTAINER_MYSQL)
+
 IP_CONTAINER=$(shell docker inspect -f '{{range .NetworkSettings.Networks}}{{.IPAddress}}{{end}}' $(NAME_CONTAINER))
+IP_CONTAINER_MYSQL=$(shell docker inspect -f '{{range .NetworkSettings.Networks}}{{.IPAddress}}{{end}}' $(NAME_CONTAINER_MYSQL))
+
 
 
 .PHONY: help
@@ -97,7 +104,6 @@ install_drupal:
 	docker exec $(shell docker ps --filter name='^/$(PROJECT_NAME)_civicrm' --format "{{ .ID }}") drush -l http://${PROJECT_NAME}.${DOMAIN} -r $(DRUPAL_ROOT) en $(MODULES) -y
 	make set_permissions
 
-
 .PHONY: uninstall_drupal
 uninstall_drupal:
 	docker exec $(shell docker ps --filter name='^/$(PROJECT_NAME)_mysql' --format "{{ .ID }}") mysql -u root -padmin -e "DROP DATABASE IF EXISTS drupal;"
@@ -143,6 +149,17 @@ sync_external_db:
 	sudo rsync -uzva --no-l -e "ssh $(SSH_REMOTE_EXTRA_PARAMS)" $(SSH_REMOTE_USER)@$(SSH_REMOTE_HOST):$(SSH_REMOTE_PATH)/libraries html/web/sites/default
 	sudo rsync -uzva --no-l -e "ssh $(SSH_REMOTE_EXTRA_PARAMS)" $(SSH_REMOTE_USER)@$(SSH_REMOTE_HOST):$(SSH_REMOTE_PATH)/vendor html/web/sites/default
 	make set_permissions
+
+.PHONY connect_vpn:
+connect_vpn:
+	docker exec $(shell docker ps --filter name='^/$(PROJECT_NAME)_civicrm' --format "{{ .ID }}") vpnc-connect --local-port 0 $(VPN_CONFIG_FILE)
+	docker exec $(shell docker ps --filter name='^/$(PROJECT_NAME)_civicrm' --format "{{ .ID }}")  /bin/sh -c "echo $(IP_CONTAINER_MYSQL) $(NAME_CONTAINER_MYSQL) >> /etc/hosts"
+	docker exec $(shell docker ps --filter name='^/$(PROJECT_NAME)_civicrm' --format "{{ .ID }}") cat /etc/hosts
+
+.PHONY disconnect_vpn:
+disconnect_vpn:
+	docker exec $(shell docker ps --filter name='^/$(PROJECT_NAME)_civicrm' --format "{{ .ID }}") vpnc-disconnect
+
 
 .PHONY: logs
 logs:
