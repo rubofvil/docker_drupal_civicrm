@@ -138,10 +138,10 @@ sync_external_db:
 	docker exec -i $(shell docker ps --filter name='^/$(PROJECT_NAME)_mysql' --format "{{ .ID }}") mysql -u root -padmin drupal < $(MYSQL_REMOTE_DB).sql $(filter-out $@,$(MAKECMDGOALS))
 	docker exec $(shell docker ps --filter name='^/$(PROJECT_NAME)_mysql' --format "{{ .ID }}") rm $(MYSQL_REMOTE_DB).sql
 	sudo rsync -uzva --no-l -e "ssh $(SSH_REMOTE_EXTRA_PARAMS)" $(SSH_REMOTE_USER)@$(SSH_REMOTE_HOST):$(SSH_REMOTE_PATH)/files/civicrm html/web/sites/default/files/
-	sudo rsync -uzva --no-l -e "ssh $(SSH_REMOTE_EXTRA_PARAMS)" $(SSH_REMOTE_USER)@$(SSH_REMOTE_HOST):$(SSH_REMOTE_PATH)/modules html/web/sites
-	sudo rsync -uzva --no-l -e "ssh $(SSH_REMOTE_EXTRA_PARAMS)" $(SSH_REMOTE_USER)@$(SSH_REMOTE_HOST):$(SSH_REMOTE_PATH)/themes html/web/sites
-	sudo rsync -uzva --no-l -e "ssh $(SSH_REMOTE_EXTRA_PARAMS)" $(SSH_REMOTE_USER)@$(SSH_REMOTE_HOST):$(SSH_REMOTE_PATH)/libraries html/web/sites
-	sudo rsync -uzva --no-l -e "ssh $(SSH_REMOTE_EXTRA_PARAMS)" $(SSH_REMOTE_USER)@$(SSH_REMOTE_HOST):$(SSH_REMOTE_PATH)/vendor html/web/sites
+	sudo rsync -uzva --no-l -e "ssh $(SSH_REMOTE_EXTRA_PARAMS)" $(SSH_REMOTE_USER)@$(SSH_REMOTE_HOST):$(SSH_REMOTE_PATH)/modules html/web/sites/default
+	sudo rsync -uzva --no-l -e "ssh $(SSH_REMOTE_EXTRA_PARAMS)" $(SSH_REMOTE_USER)@$(SSH_REMOTE_HOST):$(SSH_REMOTE_PATH)/themes html/web/sites/default
+	sudo rsync -uzva --no-l -e "ssh $(SSH_REMOTE_EXTRA_PARAMS)" $(SSH_REMOTE_USER)@$(SSH_REMOTE_HOST):$(SSH_REMOTE_PATH)/libraries html/web/sites/default
+	sudo rsync -uzva --no-l -e "ssh $(SSH_REMOTE_EXTRA_PARAMS)" $(SSH_REMOTE_USER)@$(SSH_REMOTE_HOST):$(SSH_REMOTE_PATH)/vendor html/web/sites/default
 	make set_permissions
 
 .PHONY: logs
