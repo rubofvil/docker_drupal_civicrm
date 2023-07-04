@@ -165,3 +165,5 @@ RUN sudo chmod +x /usr/local/bin/cv
 RUN curl https://drupalconsole.com/installer -L -o drupal.phar
 RUN mv drupal.phar /usr/local/bin/drupal
 RUN chmod +x /usr/local/bin/drupal
+
+WORKDIR /var/www/html

@@ -153,6 +153,7 @@ sync_external_db:
 .PHONY connect_vpn:
 connect_vpn:
 	docker exec $(shell docker ps --filter name='^/$(PROJECT_NAME)_civicrm' --format "{{ .ID }}") vpnc-connect --local-port 0 $(VPN_CONFIG_FILE)
+# ToDo veifry if exist previously the register in /etc/hosts
 	docker exec $(shell docker ps --filter name='^/$(PROJECT_NAME)_civicrm' --format "{{ .ID }}")  /bin/sh -c "echo $(IP_CONTAINER_MYSQL) $(NAME_CONTAINER_MYSQL) >> /etc/hosts"
 	docker exec $(shell docker ps --filter name='^/$(PROJECT_NAME)_civicrm' --format "{{ .ID }}") cat /etc/hosts
 
