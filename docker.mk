@@ -69,6 +69,10 @@ composer:
 drush:
 	docker exec $(shell docker ps --filter name='^/$(PROJECT_NAME)_civicrm' --format "{{ .ID }}") drush --uri=$(PROJECT_NAME).$(DOMAIN) -r $(DRUPAL_ROOT) $(filter-out $@,$(MAKECMDGOALS))
 
+.PHONY: drush_uli
+drush_uli:
+	google-chrome $(shell docker exec $(shell docker ps --filter name='^/$(PROJECT_NAME)_civicrm' --format "{{ .ID }}") drush --uri=$(PROJECT_NAME).$(DOMAIN) -r $(DRUPAL_ROOT) uli)
+
 .PHONY: cv
 cv:
 	docker exec -w $(DRUPAL_ROOT) $(shell docker ps --filter name='^/$(PROJECT_NAME)_civicrm' --format "{{ .ID }}") cv $(filter-out $@,$(MAKECMDGOALS))
@@ -130,7 +134,6 @@ download_drupal_civicrm:
 	docker-compose down && docker-compose up -d
 #	docker exec $(shell docker ps --filter name='^/$(PROJECT_NAME)_civicrm' --format "{{ .ID }}") composer install --working-dir=$(COMPOSER_ROOT)
 
-
 # ToDO get the credenctials with `drush @alias sql-connect`
 .PHONE: sync_external_db
 sync_external_db:
@@ -160,7 +163,6 @@ connect_vpn:
 .PHONY disconnect_vpn:
 disconnect_vpn:
 	docker exec $(shell docker ps --filter name='^/$(PROJECT_NAME)_civicrm' --format "{{ .ID }}") vpnc-disconnect
-
 
 .PHONY: logs
 logs:
