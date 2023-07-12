@@ -168,6 +168,10 @@ disconnect_vpn:
 logs:
 	@docker-compose logs -f $(filter-out $@,$(MAKECMDGOALS))
 
+.PHONY: get_ipv_vpn
+get_ipv_vpn:
+	docker exec $(shell docker ps --filter name='^/$(PROJECT_NAME)_civicrm' --format "{{ .ID }}") ip addr show tun0 | grep -Po 'inet \K[\d.]+'
+
 # https://stackoverflow.com/a/6273809/1826109
 %:
 	@:
