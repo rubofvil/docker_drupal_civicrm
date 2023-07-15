@@ -56,6 +56,7 @@ RUN apt-get update \
   wget \
   memcached \
   telnet \
+  ssh-client \
   && rm -r /var/lib/apt/lists/*
 
 # Install php extensions (curl, json, mbstring, openssl, posix, phar
