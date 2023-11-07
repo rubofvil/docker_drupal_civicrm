@@ -11,6 +11,8 @@
 
 - [civicrm-buildkit-docker](https://github.com/michaelmcandrew/civicrm-buildkit-docker)
 - [wodby/docker4drupal](https://github.com/wodby/docker4drupal)
+- [https://github.com/omega8cc/boa](https://raw.githubusercontent.com/omega8cc/boa/fe07ca47d8a712615b00d2afda79e9952e80408e/aegir/conf/my.cnf.txt)
+  - my.cnf
 
 ## Steps to migrate
 

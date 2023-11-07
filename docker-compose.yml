@@ -32,7 +32,8 @@ services:
       MYSQL_ROOT_PASSWORD: admin
     command: --init-file /home/init.sql
     volumes:
-      - /ssd/docker/${PROJECT_NAME}:/var/lib/mysql
+      - ./my.cnf:/etc/my.cnf:ro
+      - ${MYSQL_VOLUME}:/var/lib/mysql
       - ./init.sql:/home/init.sql
     restart: unless-stopped
     networks:
@@ -70,6 +71,7 @@ services:
   chrome:
     image: selenium/standalone-chrome:97.0-chromedriver-97.0
     container_name: "${PROJECT_NAME}_selenium"
+    restart: unless-stopped
     ports:
       - "7900:7900"
       - "5900:5900"
@@ -87,4 +89,5 @@ services:
 
 networks:
   rubofvil_lan:
-    external: true
+    external:
+      name: ${NETWORK_NAME}
