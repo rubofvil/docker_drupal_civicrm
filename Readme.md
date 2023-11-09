@@ -59,10 +59,10 @@ Example to use with vscode with xdebug with xdebug
 
 ## Rules to add ufw for xdebug
 
-´´´bash
+```bash
 sudo ufw allow from 172.18.0.0/24 to any port 9003
 sudo ufw allow from 172.17.0.1 to any port 9003
-´´´
+```
 
 ## Example of use PHPUNIT
 
