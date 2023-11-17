@@ -14,8 +14,6 @@ NAME_CONTAINER_MYSQL=$(PROJECT_NAME)$(SUFFIX_CONTAINER_MYSQL)
 IP_CONTAINER=$(shell docker inspect -f '{{range .NetworkSettings.Networks}}{{.IPAddress}}{{end}}' $(NAME_CONTAINER))
 IP_CONTAINER_MYSQL=$(shell docker inspect -f '{{range .NetworkSettings.Networks}}{{.IPAddress}}{{end}}' $(NAME_CONTAINER_MYSQL))
 
-
-
 .PHONY: help
 ifneq (,$(wildcard docker.mk))
 help : docker.mk
@@ -102,6 +100,17 @@ clone_repo:
 
 .PHONY: install_drupal
 install_drupal:
+	# Related issue with multisite
+	# Check if exist directory settings
+	if [ ! -d "$(DRUPAL_ROOT)/sites/default" ]; then \
+		docker exec $(shell docker ps --filter name='^/$(PROJECT_NAME)_civicrm' --format "{{ .ID }}") mkdir $(DRUPAL_ROOT)/sites/default; \
+	fi
+	# Check if exist file settings.php
+	if [ ! -f "$(DRUPAL_ROOT)/sites/default/settings.php" ]; then \
+		docker exec $(shell docker ps --filter name='^/$(PROJECT_NAME)_civicrm' --format "{{ .ID }}") cd $(DRUPAL_ROOT)/sites/default/ && wget https://raw.githubusercontent.com/drupal/drupal/$(REPO_DRUPAL_TAG)/sites/default/default.settings.php; \
+	fi
+	# Overwrite all set_permissions
+	docker exec $(shell docker ps --filter name='^/$(PROJECT_NAME)_civicrm' --format "{{ .ID }}") sudo chmod 777 $(DRUPAL_ROOT)/sites/default
 	docker exec $(shell docker ps --filter name='^/$(PROJECT_NAME)_mysql' --format "{{ .ID }}") mysql -u root -padmin -e "DROP DATABASE IF EXISTS drupal; CREATE DATABASE drupal;"
 	docker exec $(shell docker ps --filter name='^/$(PROJECT_NAME)_civicrm' --format "{{ .ID }}") drush -r $(DRUPAL_ROOT) site-install ${PROFILE} --db-url=mysql://root:admin@${PROJECT_NAME}_mysql:3306/drupal --account-pass=admin --uri=http://$(PROJECT_NAME).$(DOMAIN) -y
 	docker exec $(shell docker ps --filter name='^/$(PROJECT_NAME)_civicrm' --format "{{ .ID }}") sudo chmod 777 $(DRUPAL_ROOT)/sites/default
