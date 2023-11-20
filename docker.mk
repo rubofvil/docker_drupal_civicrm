@@ -96,17 +96,25 @@ phpunit:
 clone_repo:
 	rm -rf html
 	git clone -b ${REPO_DRUPAL_TAG} ${REPO_DRUPAL} html
+
+.PHONY: download_repo
+download_repo:
+	rm -rf html
+	mkdir html
+	wget -O html/drupal.zip ${REPO_DRUPAL_ZIP}
+	unzip -d html html/drupal.zip
+	rm html/drupal.zip
 	docker-compose down && docker-compose up -d
 
 .PHONY: install_drupal
 install_drupal:
 	# Related issue with multisite
 	# Check if exist directory settings
-	if [ ! -d "$(DRUPAL_ROOT)/sites/default" ]; then \
+	if [ docker exec $(shell docker ps --filter name='^/$(PROJECT_NAME)_civicrm' --format "{{ .ID }}") -d $(DRUPAL_ROOT)/sites/default ]; then \
 		docker exec $(shell docker ps --filter name='^/$(PROJECT_NAME)_civicrm' --format "{{ .ID }}") mkdir $(DRUPAL_ROOT)/sites/default; \
 	fi
 	# Check if exist file settings.php
-	if [ ! -f "$(DRUPAL_ROOT)/sites/default/settings.php" ]; then \
+	if [ docker exec $(shell docker ps --filter name='^/$(PROJECT_NAME)_civicrm' --format "{{ .ID }}") -f $(DRUPAL_ROOT)/sites/default/settings.php ]; then \
 		docker exec $(shell docker ps --filter name='^/$(PROJECT_NAME)_civicrm' --format "{{ .ID }}") cd $(DRUPAL_ROOT)/sites/default/ && wget https://raw.githubusercontent.com/drupal/drupal/$(REPO_DRUPAL_TAG)/sites/default/default.settings.php; \
 	fi
 	# Overwrite all set_permissions
