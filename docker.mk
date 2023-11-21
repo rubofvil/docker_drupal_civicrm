@@ -83,6 +83,7 @@ clean_database_test:
 phpunit_setup:
 	rm -rf html/phpunit.xml
 	cp phpunit.xml.dist html/phpunit.xml
+	sed -ri 's/name\=\"SIMPLETEST_DB\"\ value\=\"(.*)\"/name\=\"SIMPLETEST_DB\"\ value\=\"mysql:\/\/root\:admin\@$(PROJECT_NAME)_mysql\:3306\/test\"/g' html/phpunit.xml
 	sed -ri 's/name\=\"SIMPLETEST_BASE_URL\"\ value\=\"(.*)\"/name\=\"SIMPLETEST_BASE_URL\"\ value\=\"http\:\/\/$(IP_CONTAINER)\"/g' html/phpunit.xml
 	sed -ri 's/name\=\"BROWSERTEST_OUTPUT_BASE_URL\"\ value\=\"(.*)\"/name\=\"BROWSERTEST_OUTPUT_BASE_URL\"\ value\=\"http\:\/\/$(PROJECT_NAME)\.localhost\"/g' html/phpunit.xml
 	sed -i 's/ALIAS_SELENIUM/$(PROJECT_NAME)_selenium/g' html/phpunit.xml
