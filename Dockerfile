@@ -163,6 +163,10 @@ RUN rm /usr/local/etc/php/conf.d/docker-php-ext-xdebug.ini
 RUN sudo curl -LsS https://download.civicrm.org/cv/cv.phar -o /usr/local/bin/cv
 RUN sudo chmod +x /usr/local/bin/cv
 
+## Install civix
+RUN sudo curl -LsS https://download.civicrm.org/civix/civix.phar -o /usr/local/bin/civix
+RUN sudo chmod +x /usr/local/bin/civix
+
 ## Install drupal console
 RUN curl https://drupalconsole.com/installer -L -o drupal.phar
 RUN mv drupal.phar /usr/local/bin/drupal
