@@ -1,7 +1,7 @@
 version: "3.1"
 services:
   civicrm:
-    image: rubofvil/civicrm
+    image: "rubofvil/civicrm_${PROJECT_NAME}"
     container_name: "${PROJECT_NAME}_civicrm"
     hostname: "${PROJECT_NAME}_civicrm"
     build: .
