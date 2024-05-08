@@ -69,7 +69,8 @@ drush:
 
 .PHONY: drush_uli
 drush_uli:
-	google-chrome $(shell docker exec $(shell docker ps --filter name='^/$(PROJECT_NAME)_civicrm' --format "{{ .ID }}") drush --uri=$(PROJECT_NAME).$(DOMAIN) -r $(DRUPAL_ROOT) uli)
+	@echo "Opening browser with one-time login link..."
+	xdg-open $(shell docker exec $(shell docker ps --filter name='^/$(PROJECT_NAME)_civicrm' --format "{{ .ID }}") drush --uri=$(PROJECT_NAME).$(DOMAIN) -r $(DRUPAL_ROOT) uli)
 
 .PHONY: cv
 cv:
