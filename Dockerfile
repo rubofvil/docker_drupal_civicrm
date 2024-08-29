@@ -1,4 +1,4 @@
-FROM php:8.1.19-apache
+FROM php:7.4-apache-buster
 # Install apt packages
 #
 # Required for php extensions
@@ -29,8 +29,8 @@ RUN apt-get update \
   && apt-get install -y --no-install-recommends \
   apt-transport-https
 
-  RUN curl -sL https://deb.nodesource.com/setup_14.x | bash - \
-    && apt-get update \
+RUN curl -sL https://deb.nodesource.com/setup_14.x | bash - \
+  && apt-get update \
   && apt-get install -y --no-install-recommends \
   bash-completion \
   default-mysql-client \
@@ -55,9 +55,6 @@ RUN apt-get update \
   vpnc \
   wget \
   memcached \
-  telnet \
-  ssh-client \
-  jq \
   && rm -r /var/lib/apt/lists/*
 
 # Install php extensions (curl, json, mbstring, openssl, posix, phar
@@ -73,16 +70,16 @@ RUN docker-php-ext-install bcmath \
   && docker-php-ext-install opcache \
   && docker-php-ext-install pdo_mysql \
   && docker-php-ext-install soap \
-  && docker-php-ext-install zip \
-  && docker-php-ext-install filter
+  && docker-php-ext-install zip
+
+
 
 # Install and enable imagick PECL extensions
 RUN pecl install imagick \
   && docker-php-ext-enable imagick
 
 # Install xdebug PECL extension
-RUN pecl install xdebug\
-    && docker-php-ext-enable xdebug
+# RUN pecl install xdebug
 
 RUN a2enmod rewrite
 
@@ -135,41 +132,38 @@ RUN git init . \
     && git remote add origin https://github.com/rubofvil/civicrm-buildkit.git \
     && git pull origin master
 
+
 RUN git clone https://github.com/squizlabs/PHP_CodeSniffer
+
+# RUN set -eux \
+  # cd PHP_CodeSniffer \
+  # curl -sS -L https://github.com/squizlabs/PHP_CodeSniffer/releases/download/latest/phpcs.phar -o /phpcs.phar \
+  # chmod +x /phpcs.phar \
+  # mv /phpcs.phar /usr/bin/phpcs
+
 
 WORKDIR /tmp
 RUN curl -OL https://squizlabs.github.io/PHP_CodeSniffer/phpcs.phar && \
     cp /tmp/phpcs.phar /usr/local/bin/phpcs && \
     chmod +x /usr/local/bin/phpcs
 
+# COPY --from=builder /usr/bin/phpcs /usr/bin/phpcs
+
 WORKDIR /buildkit
 
 RUN git clone https://github.com/civicrm/coder.git
 RUN phpcs --config-set installed_paths /buildkit/coder/coder_sniffer
 
-USER root
 
-COPY ./docker-civicrm-entrypoint /usr/local/bin
+RUN civi-download-tools
 
-RUN chmod u+x /usr/local/bin/docker-civicrm-entrypoint
+RUN civibuild cache-warmup
 
-ENTRYPOINT [ "docker-civicrm-entrypoint" ]
+# RUN composer config --global disable-tls true
+# RUN composer config --global secure-http false
 
-CMD ["apache2-foreground"]
+# COPY buildkit.ini /usr/local/etc/php/conf.d/buildkit.ini
 
-RUN rm /usr/local/etc/php/conf.d/docker-php-ext-xdebug.ini
+# RUN civi-download-tools
 
-## Install cv
-RUN sudo curl -LsS https://download.civicrm.org/cv/cv.phar -o /usr/local/bin/cv
-RUN sudo chmod +x /usr/local/bin/cv
-
-## Install civix
-RUN sudo curl -LsS https://download.civicrm.org/civix/civix.phar -o /usr/local/bin/civix
-RUN sudo chmod +x /usr/local/bin/civix
-
-## Install drupal console
-RUN curl https://drupalconsole.com/installer -L -o drupal.phar
-RUN mv drupal.phar /usr/local/bin/drupal
-RUN chmod +x /usr/local/bin/drupal
-
-WORKDIR /var/www/html
+# RUN civibuild cache-warmup
