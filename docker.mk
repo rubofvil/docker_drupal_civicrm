@@ -119,6 +119,10 @@ install_drupal:
 	if [ docker exec $(shell docker ps --filter name='^/$(PROJECT_NAME)_civicrm' --format "{{ .ID }}") -f $(DRUPAL_ROOT)/sites/default/settings.php ]; then \
 		docker exec $(shell docker ps --filter name='^/$(PROJECT_NAME)_civicrm' --format "{{ .ID }}") cd $(DRUPAL_ROOT)/sites/default/ && wget https://raw.githubusercontent.com/drupal/drupal/$(REPO_DRUPAL_TAG)/sites/default/default.settings.php; \
 	fi
+	# Check if exist ciivcrm.settings.php and delete if exist
+	if [ docker exec $(shell docker ps --filter name='^/$(PROJECT_NAME)_civicrm' --format "{{ .ID }}") -f $(DRUPAL_ROOT)/sites/default/civicrm.settings.php ]; then \
+		docker exec $(shell docker ps --filter name='^/$(PROJECT_NAME)_civicrm' --format "{{ .ID }}") rm -f $(DRUPAL_ROOT)/sites/default/civicrm.settings.php; \
+	fi
 	# Overwrite all set_permissions
 	docker exec $(shell docker ps --filter name='^/$(PROJECT_NAME)_civicrm' --format "{{ .ID }}") sudo chmod 777 $(DRUPAL_ROOT)/sites/default
 	docker exec $(shell docker ps --filter name='^/$(PROJECT_NAME)_mysql' --format "{{ .ID }}") mysql -u root -padmin -e "DROP DATABASE IF EXISTS drupal; CREATE DATABASE drupal;"
